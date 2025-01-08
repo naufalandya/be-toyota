@@ -1,0 +1,562 @@
+/ Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+Table projects {
+  id serial [primary key]
+  name varchar(255) [not null]
+  developer varchar(255)
+  scheme varchar(50)
+  project_cost float [note: 'in USD']
+  rates float [note: 'in cUSD/kWh']
+  required_cod date
+  financing varchar(100)
+  epc_contractor text
+  phase project_phase
+  owner string
+  location text  
+  der float
+  irr float
+  tkdn float
+  power_plant_id int 
+}
+Ref: projects.power_plant_id - power_plants.id
+
+Table power_plants {
+  id serial [primary key]
+  type power_plant_type
+  capacity varchar(100)
+  energy_generated_per_year float [note: 'in GWh']
+  equivalent_co2_reduction_per_year float [note: 'in kTon/Year']
+  interconnection text
+  area float [note: 'in HA']
+  lat float
+  lng float
+}
+
+Enum project_phase {
+  INITIATION
+  DEVELOPMENT
+  CONSTRUCTION
+  OPERATION
+}
+
+Enum power_plant_type {
+ PLTA
+ PLTB
+ PLTS
+ PLTU
+}
+
+Table project_timeline {
+  id serial [primary key]
+  project_id int
+  name varchar(255)
+}
+Ref: project_timeline.project_id > projects.id
+
+Table project_timeline_detail {
+  id serial [primary key]
+  timeline_id int
+  name varchar(255)
+  deadline date
+}
+Ref: project_timeline_detail.timeline_id > project_timeline.id
+
+Table project_issues{
+  id bigint
+  project_id bigint
+  types issue_types
+  description string
+  follow_up string
+}
+Ref: project_issues.project_id > projects.id
+
+Table procurement {
+  id serial
+  project_id bigint
+  item string
+  start_plan date
+  finish_plan date
+  start_actual date
+  finish_actual date
+}
+Ref: procurement.project_id > projects.id
+
+Table critical_path {
+  id serial
+  project_id bigint
+  item string
+  plan date
+  status string
+  remark string
+}
+Ref: critical_path.project_id > projects.id
+
+Enum issue_types{
+  Engineering 
+  Konstruksi
+  TKDN
+  "Penyediaan energi primer"
+  "Penyediaan jasa O&M"
+  "Penyediaan organisasi & SDM"
+  "Commercial Operation Date"
+  "Financial Close"
+
+}
+
+//disini
+Table project_irr{
+  id serial
+  project_id bigint
+  irr float
+  updated_at date
+  updated_by bigint
+}
+Ref: project_irr.project_id > projects.id
+Ref: project_irr.updated_by > users.id
+
+Table project_shareholders {
+  id serial [primary key]
+  project_id int
+  shareholder_id int
+  percentage float
+}
+Ref: project_shareholders.project_id > projects.id
+Ref: project_shareholders.shareholder_id > shareholders.id
+
+Table shareholders {
+  id serial [primary key]
+  name string
+  description text [null]
+}
+
+Table project_costs {
+  id serial
+  project_id bigint
+  metric string
+  unit string
+  value float
+}
+Ref: project_costs.project_id > projects.id
+
+Table general_info {
+  id serial
+  project_id bigint
+  metric string
+  unit string
+  value float
+}
+Ref: general_info.project_id > projects.id
+
+
+Table financial_statement {
+  id serial
+  project_id bigint
+  metric varchar(255) 
+  units varchar(10)  
+  value decimal(20, 2) 
+  report_type financial_report_type
+  month_period int
+  year_period int 
+  
+}
+Ref: financial_statement.project_id > projects.id
+
+Enum financial_report_type {
+  "Profit and Loss"
+  "Balance Sheet"
+  Cashflow
+}
+
+table installed_capacity {
+  id serial
+  project_id bigint
+  metric varchar(255) 
+  units varchar(10)  
+  value decimal(20, 2) 
+  month_period int
+  year_period int 
+}
+Ref: installed_capacity.project_id > projects.id
+
+table periodic_report{
+  id serial
+  project_id bigint
+  report_type periodic_report
+  metric varchar(255) 
+  units varchar(10)  
+  value decimal(20, 2) 
+  month_period int
+  year_period int 
+}
+Ref: periodic_report.project_id > projects.id
+
+Enum quarterly_report_type {
+  "Technical Operation"
+  "Free Cashflow to Equity"
+  Macroeconomic
+  
+}
+
+Table issues {
+  id serial [primary key]
+  project_id int 
+  // meeting_id int [null]  
+  duedate datetime
+  name varchar
+  priority issue_priorities
+  status issue_statuses
+  remark text
+  assignee int
+}
+Ref: projects.id < issues.project_id
+Ref: issues.assignee - users.id
+// Ref: issues.meeting_id > meetings.id
+
+Enum issue_priorities {
+  HIGH
+  MID
+  LOW
+}
+
+Enum issue_statuses{
+  OPEN
+  ON_PROGRES
+  COMPLETE
+}
+
+//disini
+
+Table issue_colaborators {
+  id int [primary key]
+  issue_id int
+  user_id int
+}
+Ref: issue_colaborators.issue_id > issues.id
+Ref: issue_colaborators.user_id > users.id
+
+// Table tasks {
+//   id int [primary key]
+//   issue_id int
+//   name text
+//   is_done bool [default: false]
+//   assigne int
+// }
+// Ref: tasks.assigne - users.id
+
+// Table comments {
+//   id int [primary key]
+//   issue_id int
+//   message longtext
+//   created_at datetime
+//   created_by int
+// }
+// Ref: comments.issue_id > issues.id
+// Ref: comments.created_by - users.id
+
+Table issue_histories {
+  id int [primary key]
+  issue_id int
+  event varchar(255) [note: 'add comment/update status/etc']
+  content text
+  created_at datetime
+  created_by int
+}
+Ref: issue_histories.issue_id > issues.id
+
+Table meetings {
+  id int [primary key]
+  project_id int
+  prod_bussines varchar(255)
+  name varchar(255)
+  conducted_at date
+  contents longtext
+  participants json
+  approved_by int [null]
+  key_indicator json [null]
+}
+Ref: meetings.project_id > projects.id
+Ref: meetings.approved_by - users.id
+
+Table meeting_attachments{
+  id int [primary key]
+  meeting_id int
+  file_url text
+}
+Ref: meeting_attachments.meeting_id > meetings.id
+
+Table users {
+  id int [primary key]
+  fullname text
+  username varhcar(255) [unique]
+  password varchar(255) [note: 'encrypted']
+  
+}
+
+Table groups {
+  id serial
+  name string
+}
+
+Table user_groups {
+  id serial
+  user_id int [ref: > users.id]
+  group_id int [ref: > groups.id]
+}
+
+Table roles {
+   id int [primary key]
+   name varchar(255)
+}
+
+Table user_roles {
+  role_id int
+  user_id int 
+}
+Ref: user_roles.role_id > roles.id
+Ref: user_roles.user_id > users.id
+
+Table permissions {
+  id int [primary key]
+  name varchar(255)
+}
+
+Table role_permissions {
+  role_id int
+  permission_id int 
+}
+Ref: role_permissions.role_id > roles.id
+Ref: role_permissions.permission_id > permissions.id
+
+//disini
+
+Table project_plan_timeline
+{
+  id serial
+  project_id bigint
+  description string
+  start_date date
+  finish_date date
+  weight float
+}
+Ref: project_plan_timeline.project_id> projects.id
+
+Table project_plan_timeline_details
+{
+  id serial
+  project_plan_id bigint
+  version int
+  duedate date
+  planing float
+  actual float
+}
+Ref: project_plan_timeline_details.project_plan_id > project_plan_timeline.id
+
+Table legal_folders {
+  id int [pk, increment]
+  name varchar(255)
+  user_id int [ref: > users.id]
+  parent_folder_id int [ref: > legal_folders.id, null]
+  is_shared boolean
+  
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table legal_files {
+  id int [pk, increment]
+  name varchar(255)
+  folder_id int [ref: > legal_folders.id]
+  user_id int [ref: > users.id]
+  file_path varchar(255)
+  file_status string
+  is_shared boolean
+}
+
+Table shared_permissions {
+  id int [pk, increment]
+  file_id int [ref: > legal_files.id, null]
+  folder_id int [ref: > legal_folders.id, null]
+  shared_with_user_id int [ref: > users.id]
+  permission varchar(50)
+}
+
+Table audit_logs {
+  id int [pk, increment]
+  user_id int [ref: > users.id]
+  file_id int [ref: > legal_files.id, null]
+  folder_id int [ref: > legal_folders.id, null]
+  action varchar(255)
+  details longtext
+  timestamp timestamp
+}
+
+
+
+// Table appa_details {
+//   id int [primary key] 
+//   power_plant_id int
+//   total_assets float
+//   current_assets float
+//   non_current_assets float
+//   total_liabilities float
+//   current_liabilities float
+//   long_term_liabilities float
+//   equity float
+//   share_capital float
+//   retained_earning float
+//   total_liabilities_equity float
+// }
+// Ref: appa_details.power_plant_id - power_plants.id
+
+// Table s_curve {
+//   id int [primary key] 
+//   project_id int
+//   months datetime
+//   data_scurve float
+// }
+// Ref: s_curve.project_id > projects.id
+
+Table project_images {
+  id int [primary key] 
+  project_id int
+  name string
+  image_date datetime
+  project_image image
+}
+Ref: project_images.project_id > projects.id
+
+table project_milestone {
+  id serial
+  project_id bigint
+  name string
+  deadline date
+  status smallint
+}
+Ref: project_milestone.project_id > projects.id
+
+table project_milestone_detail {
+  id serial
+  milestone_id bigint
+  remark text
+}
+Ref: project_milestone_detail.milestone_id > project_milestone.id
+
+
+// Table operational_performances {
+//   id int [primary key] 
+//   power_plant_id int
+//   generating_power float
+//   total_production float
+//   monthly_avail_factor float
+//   production float [note: 'MwH']
+//   coal_stock varchar
+//   nphr varchar
+// }
+// Ref: operational_performances.power_plant_id - power_plants.id
+
+// Table monthly_factor_rawdatas {
+//   id int [primary key] 
+//   power_plant_id int
+//   date datetime
+//   monthly_factor_data float
+// }
+// Ref: monthly_factor_rawdatas.power_plant_id > power_plants.id
+
+
+table esg_score {
+  id serial
+  project_id int [ref: > projects.id]
+  aspect string
+  value float
+  remark string
+}
+
+Table energy_consumption {
+  id int [pk, increment]
+  project_id int [ref: > projects.id]
+  period varchar(255)
+  type varchar(255)
+  consumption float
+  unit varchar(50)
+  source varchar(255)
+  indicator varchar(255)
+  reduction_target varchar(255)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table waste_management {
+  id int [pk, increment]
+  project_id int [ref: > projects.id]
+  period varchar(255)
+  waste_type varchar(255)
+  generated_amount float
+  unit varchar(50)
+  treated_amount float
+  treated_method varchar(255)
+  indicator varchar(255)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table social_responsibility {
+  id int [pk, increment]
+  project_id int [ref: > projects.id]
+  period varchar(255)
+  program_name varchar(255)
+  budget float
+  beneficiaries_count int
+  indicator varchar(255)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table human_capital {
+  id int [pk, increment]
+  project_id int [ref: > projects.id]
+  period varchar(255)
+  employee_type varchar(255)
+  employee_count int
+  training_program varchar(255)
+  indicator varchar(255)
+  created_at timestamp
+  updated_at timestamp
+}
+
+//disini
+
+Table governance {
+  id int [pk, increment]
+  project_id int [ref: > projects.id]
+  period varchar(255)
+  policy_type varchar(255)
+  details varchar(255)
+  indicator varchar(255)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table cyber_security {
+  id int [pk, increment]
+  project_id int [ref: > projects.id]
+  period varchar(255)
+  policy_description varchar(255)
+  cybersecurity_incidents int
+  response_plan varchar(255)
+  indicator varchar(255)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table esg_performance_targets {
+  id int [pk, increment]
+  project_id int [ref: > projects.id]
+  target_year int
+  goal_description text
+  progress_percentage float
+  indicator varchar(255)
+  created_at timestamp
+  updated_at timestamp
+}
+

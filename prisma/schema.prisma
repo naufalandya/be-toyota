@@ -1,0 +1,44 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+        
+model user_profile {
+  id          String    @id @default(cuid())
+  nama        String
+  nik         String    @unique
+  email       String    @unique
+  password    String
+  jabatan     String?
+  role        String?
+  supervisor  String?
+  avatar_link String?
+  insentives  insentive[]
+}
+
+model insentive {
+  id               String   @id @default(cuid())
+  nik              String
+  nama             String
+  jabatan          String
+  periode_awal     DateTime
+  periode_akhir    DateTime
+  customer         String
+  t_do_dms         Int
+  t_lunas_ar       Int
+  nama_unit        String
+  poin             Int
+  nilai_per_poin   Float
+  jumlah_insentif  Float
+  contest_insentif Float
+  sbi_insentif     Float
+  status           String
+  user_profile_id  String
+  user_profile     user_profile @relation(fields: [user_profile_id], references: [id])
+}

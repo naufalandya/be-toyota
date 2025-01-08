@@ -1,0 +1,2976 @@
+openapi: 3.0.1
+info:
+  title: Patria & Co developer API
+  description: Full documentation API for PLN Renewable Energy
+  version: 1.0.0
+servers:
+  - url: http://localhost:3002/api/v1
+    description: Development Server
+  - url: https://alobro.my.id/api/v1
+    description: Staging Server
+  - url: http://103.113.134.234:400/api/v1
+    description: Production Server
+tags:
+  - name: Authentication
+  - name: Dashboard
+  - name: Overview
+  - name: Initiation
+  - name: Development
+  - name: Construction
+  - name: Operation
+  - name: ESG
+  - name: Legal
+  - name: MOM
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+# Authentication
+  /auth/signin:
+    post:
+      tags:
+        - Authentication
+      description: Login user by email and password, and generate JWT token.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: andyakuliah@gmail.com
+                password:
+                  type: string
+                  example: waduh12345
+              required:
+                - email
+                - password
+      responses:
+        "200":
+          description: Successfully logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully login!
+                  data:
+                    type: object
+                    properties:
+                      full_name:
+                        type: string
+                        example: Naufal Andya Faiz
+                      username:
+                        type: string
+                        example: naufal_faiz
+                      email:
+                        type: string
+                        example: andyakuliah@gmail.com
+                      token:
+                        type: string
+                        example: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9...
+        "400":
+          description: Invalid Input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Password must be at least 8 characters long!
+        "401":
+          description: Incorrect password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: password is not match!
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: username does not belong to any account!
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: An error occurred during login
+  /auth/signup:
+    post:
+      tags:
+        - Authentication
+      description: Register a new user in the system using email, username, and password. Requires Bearer token for authentication.
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: andyakuliah@gmail.com
+                password:
+                  type: string
+                  example: waduh12345
+                fullname:
+                  type: string
+                  example: Naufal Andya Faiz
+                username:
+                  type: string
+                  example: naufal_faiz
+              required:
+                - email
+                - password
+                - fullname
+                - username
+      responses:
+        "201":
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: success
+        "409":
+          description: Email or username is already registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: email is already registered
+        "401":
+          description: Failed signup due to server-side issues
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Something went wrong during the signup process
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: An unexpected error occurred
+# Dashboard
+  /dashboard:
+    get:
+      tags:
+        - Dashboard
+      description: Retrieve the dashboard data, including statistics and project locations.
+      responses:
+        "200":
+          description: Successfully retrieved dashboard data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Successfully retrieved dashboard data!
+                  data:
+                    type: object
+                    properties:
+                      total_invest:
+                        type: integer
+                        example: 145000
+                      total_capacity:
+                        type: integer
+                        example: 3210
+                      total_production:
+                        type: integer
+                        example: 12800
+                      power_active:
+                        type: integer
+                        example: 2145
+                      esg_rating:
+                        type: number
+                        format: float
+                        example: 31.75
+                      saving_coal:
+                        type: integer
+                        example: 120
+                      co2_avoid:
+                        type: integer
+                        example: 100
+                      tree_plants_equal:
+                        type: integer
+                        example: 12
+                      capacity_by_type:
+                        type: object
+                        properties:
+                          pltu:
+                            type: integer
+                            example: 2300
+                          plts:
+                            type: integer
+                            example: 330
+                          plta:
+                            type: integer
+                            example: 510
+                          pltb:
+                            type: integer
+                            example: 70
+                      project_state_by_phase:
+                        type: object
+                        properties:
+                          ebt:
+                            type: object
+                            properties:
+                              pengembangan:
+                                type: integer
+                                example: 170
+                              konstruksi:
+                                type: integer
+                                example: 595
+                              operasi:
+                                type: integer
+                                example: 145
+                          non_ebt:
+                            type: object
+                            properties:
+                              pengembangan:
+                                type: integer
+                                example: 0
+                              konstruksi:
+                                type: integer
+                                example: 300
+                              operasi:
+                                type: integer
+                                example: 2000
+                      risk_performance:
+                        type: object
+                        properties:
+                          plts:
+                            type: integer
+                            example: 330
+                          pltu:
+                            type: integer
+                            example: 2300
+                          plta:
+                            type: integer
+                            example: 510
+                          pltb:
+                            type: integer
+                            example: 70
+                          plan:
+                            type: integer
+                            example: 80
+                          target:
+                            type: integer
+                            example: 100
+                      location:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            lat:
+                              type: number
+                              example: 1.603523
+                            lng:
+                              type: number
+                              example: 99.27266
+                            nameproject:
+                              type: string
+                              example: PLTA Batang Toru 510 MW
+                            namecompany:
+                              type: string
+                              example: PT North Sumatera Hydro Energy
+                            powercapacity:
+                              type: string
+                              example: 510 MW
+                            type:
+                              type: string
+                              example: plta
+                            title:
+                              type: string
+                              example: Batang Toru HPP
+                            slug:
+                              type: string
+                              example: plta-batangtoru
+                            status:
+                              type: string
+                              example: operasi
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: An unexpected error occurred
+  /overview/{slug}:
+    get:
+      tags:
+        - Overview
+      description: Retrieve detailed information about a specific power plant project using its slug.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          description: Unique slug identifier of the project
+          schema:
+            type: string
+            example: plts-cirata
+      responses:
+        "200":
+          description: Successfully retrieved project details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 123
+                      name:
+                        type: string
+                        example: PLTS Cirata
+                      project_cost:
+                        type: number
+                        example: 200000000
+                      developer:
+                        type: string
+                        example: PT Pembangkitan Jawa Bali Masdar Solar Energi
+                      coordinate:
+                        type: string
+                        example: -6.693712, 107.337385
+                      commercial_operation_date:
+                        type: string
+                        format: date
+                        example: 2023-01-15
+                      location:
+                        type: string
+                        example: Cirata, West Java
+                      phase:
+                        type: string
+                        example: konstruksi
+                      power_plants:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            interconnection:
+                              type: string
+                              example: Grid 150 kV
+                            capacity:
+                              type: string
+                              example: 145 MWp
+                            type:
+                              type: string
+                              example: PLTS
+                            lat:
+                              type: number
+                              example: -6.693712
+                            lng:
+                              type: number
+                              example: 107.337385
+                      project_information_image_link:
+                        type: string
+                        example: ""
+                      project_location_image_link:
+                        type: array
+                        items:
+                          type: string
+                          example: null
+                      status_operation:
+                        type: object
+                        properties:
+                          maximum_power_output:
+                            type: string
+                            example: 185 MWp
+                          date:
+                            type: string
+                            format: date-time
+                            example: 2023-12-07T12:00:00Z
+                          power_output:
+                            type: object
+                            properties:
+                              desktop:
+                                type: number
+                                example: 1260
+                              mobile:
+                                type: number
+                                example: 570
+                      employee:
+                        type: object
+                        properties:
+                          tugas_karya:
+                            type: integer
+                            example: 75
+                          internal_jvc:
+                            type: integer
+                            example: 125
+                      tariff:
+                        type: object
+                        properties:
+                          jsd_one:
+                            type: number
+                            example: 6.91
+                          jsd_two:
+                            type: number
+                            example: 5.82
+                      cumulative_electricity_production:
+                        type: object
+                        properties:
+                          daily:
+                            type: number
+                            example: 1250
+                          monthly:
+                            type: number
+                            example: 5238
+                          unit:
+                            type: string
+                            example: MWh
+        "404":
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: no project selected !
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: An unexpected error occurred
+# Milestone
+
+  /milestone/{slug}:
+    get:
+      tags:
+        - Development
+      description: Retrieve milestones for a specific power plant project using its slug.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          description: Unique slug identifier of the project
+          schema:
+            type: string
+            example: plts-cirata
+      responses:
+        "200":
+          description: Successfully retrieved project milestones
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          example: Foundation Completed
+                        deadline:
+                          type: string
+                          format: date
+                          example: 2024-03-15
+                        status:
+                          type: string
+                          example: completed
+                        detail:
+                          type: string
+                          example: Foundation for all turbines is successfully completed.
+                        media_project_milestone:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              link_media:
+                                type: string
+                                example: https://example.com/milestone-image.jpg
+        "404":
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: no project selected !
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: An unexpected error occurred
+  /milestone-single/{slug}:
+    post:
+      tags:
+        - Development
+      description: Create a single project milestone with an optional PDF upload for a specific project identified by its slug.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          description: Unique slug identifier of the project.
+          schema:
+            type: string
+            example: plts-cirata
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Title of the milestone.
+                  example: "Foundation Completion"
+                date:
+                  type: string
+                  format: date
+                  description: Deadline of the milestone.
+                  example: "2024-12-31"
+                notes:
+                  type: array
+                  items:
+                    type: string
+                  description: Notes related to the milestone.
+                  example: ["Foundation work completed.", "Inspections passed."]
+                pdf:
+                  type: string
+                  format: binary
+                  description: Optional PDF file related to the milestone.
+      security:
+        - bearerAuth: []
+      responses:
+        "201":
+          description: Milestone successfully created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Milestone berhasil dibuat.
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 123
+                      name:
+                        type: string
+                        example: Foundation Completion
+                      deadline:
+                        type: string
+                        format: date
+                        example: 2024-12-31
+                      detail:
+                        type: array
+                        items:
+                          type: string
+                        example: ["Foundation work completed.", "Inspections passed."]
+                      status:
+                        type: integer
+                        example: 1
+        "400":
+          description: Missing or invalid input data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "'title', 'date', dan 'notes' harus diberikan, dengan 'notes' berupa array."
+        "404":
+          description: Project not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Project tidak ditemukan!"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: An unexpected error occurred.
+  /metrics/{id}:
+    get:
+      tags:
+        - Development
+      description: Retrieve the latest project metrics data for a specific project by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique ID of the project.
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: Successfully retrieved project metrics.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      project_cost:
+                        type: number
+                        format: float
+                        example: 1000000
+                      irr:
+                        type: number
+                        format: float
+                        example: 12.5
+                      rates:
+                        type: number
+                        format: float
+                        example: 6.5
+                      anually_contract_energy:
+                        type: number
+                        format: float
+                        example: 5000
+                      project_attachment:
+                        type: object
+                        properties:
+                          attachment_link:
+                            type: string
+                            format: uri
+                            example: "https://example.com/attachment.pdf"
+        "404":
+          description: No project selected or project not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "no project selected !"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: An unexpected error occurred.
+    post:
+      tags:
+        - Development
+      description: Create or update project metrics with optional file upload.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique ID of the project.
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                annual_contract_energy:
+                  type: number
+                  format: float
+                  description: The annual contract energy value.
+                  example: 5000
+                total_project_cost:
+                  type: number
+                  format: float
+                  description: The total project cost.
+                  example: 1000000
+                total_levelized_tariff:
+                  type: number
+                  format: float
+                  description: The total levelized tariff rate.
+                  example: 6.5
+              required:
+                - annual_contract_energy
+                - total_project_cost
+                - total_levelized_tariff
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                pdf:
+                  type: string
+                  format: binary
+                  description: Optional PDF file to upload.
+      responses:
+        "201":
+          description: Successfully created or updated project metrics.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Project metrics created successfully.
+        "400":
+          description: Invalid request parameters or failed file upload.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Failed to upload file.
+        "404":
+          description: Project not found or ID not provided.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: No project selected!
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Unexpected error.
+  /timeline/{slug}:
+    get:
+      tags:
+        - Initiation
+      description: Retrieve the project timeline based on the provided project slug.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          description: Unique slug of the project.
+          schema:
+            type: string
+            example: plts-ikn
+      responses:
+        "200":
+          description: Successfully retrieved project timeline data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        title:
+                          type: string
+                          example: Kick-off Meeting
+                        description:
+                          type: string
+                          example: Initial project discussion with stakeholders.
+                        date:
+                          type: string
+                          format: date
+                          example: "2023-10-15"
+                        attachment_link:
+                          type: string
+                          format: uri
+                          example: "https://example.com/timeline-doc.pdf"
+        "404":
+          description: Project not found or slug not provided.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: No project selected!
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Unexpected error.
+    post:
+      tags:
+        - Initiation
+      description: Create a new timeline entry for the project based on the given slug.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          description: Unique slug of the project.
+          schema:
+            type: string
+            example: plts-ikn
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - project_id
+                - title
+                - description
+                - type
+                - date
+              properties:
+                project_id:
+                  type: integer
+                  example: 1
+                title:
+                  type: string
+                  example: "Project Kickoff"
+                description:
+                  type: string
+                  example: "Initial project setup and stakeholder meeting"
+                type:
+                  type: string
+                  example: "Initiation"
+                date:
+                  type: string
+                  format: date
+                  example: "2023-11-01"
+      security:
+        - bearerAuth: []
+      responses:
+        "201":
+          description: Successfully created a project timeline entry.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Project timeline created successfully!"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      title:
+                        type: string
+                        example: "Project Kickoff"
+                      description:
+                        type: string
+                        example: "Initial project setup and stakeholder meeting"
+                      date:
+                        type: string
+                        format: date
+                        example: "2023-11-01"
+                      attachment_link:
+                        type: string
+                        example: "https://example.com/timeline-doc.pdf"
+        "400":
+          description: Bad request, missing required fields or invalid data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "PDF file is required."
+        "404":
+          description: Project not found or invalid project slug.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Project not found!"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Failed to upload file."
+  /development-timeline/{id}:
+    get:
+      tags:
+        - Development
+      description: Get the development timeline for a project based on its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique ID of the project.
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: Successfully retrieved the development timeline.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Success"
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        title:
+                          type: string
+                          example: "Site Preparation"
+                        description:
+                          type: string
+                          example: "Initial site clearing and preparation work."
+                        date:
+                          type: string
+                          format: date
+                          example: "2023-10-01"
+                        attachment_link:
+                          type: string
+                          example: "https://example.com/development-timeline/1"
+        "404":
+          description: Project not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "No project selected!"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "An unexpected error occurred."
+    post:
+      tags:
+        - Development
+      description: Create a new entry for the development timeline of a project.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique ID of the project.
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+                - type
+                - date
+              properties:
+                title:
+                  type: string
+                  maxLength: 255
+                  description: Title of the development timeline.
+                  example: "Site Preparation"
+                description:
+                  type: string
+                  description: Detailed description of the timeline event.
+                  example: "Initial site clearing and preparation work."
+                type:
+                  type: string
+                  description: Type of the development (e.g., Planning, Construction).
+                  example: "Construction"
+                date:
+                  type: string
+                  format: date
+                  description: Date of the timeline event in ISO format.
+                  example: "2023-10-01"
+                attachment_link:
+                  type: string
+                  format: uri
+                  description: URL to the attached file (optional, PDF file).
+                  example: "https://example.com/timeline/attachment.pdf"
+      responses:
+        "201":
+          description: Successfully created a new project timeline.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Project timeline created successfully!"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      title:
+                        type: string
+                        example: "Site Preparation"
+                      description:
+                        type: string
+                        example: "Initial site clearing and preparation work."
+                      date:
+                        type: string
+                        format: date
+                        example: "2023-10-01"
+                      attachment_link:
+                        type: string
+                        example: "https://example.com/development-timeline/1"
+        "400":
+          description: Bad request (Missing file or invalid input).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "PDF file is required."
+        "404":
+          description: Project not found or project ID is invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Project not found!"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "An unexpected error occurred."
+  /construction/{id}:
+    get:
+      tags:
+        - Construction
+      description: Fetch construction-related information for a specific project by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique project ID.
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: Successfully retrieved construction information.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      irr:
+                        type: number
+                        example: 12.5
+                        description: Internal rate of return for the project.
+                      tkdn:
+                        type: number
+                        example: 45.7
+                        description: Local content percentage (TKDN).
+                      total_progress_plan:
+                        type: number
+                        example: 85.0
+                        description: Planned total progress percentage.
+                      total_actual_plan:
+                        type: number
+                        example: 80.0
+                        description: Actual total progress percentage.
+                      penyediaan_energi_primer:
+                        type: string
+                        example: "Coal"
+                        description: Primary energy source.
+                      penyediaan_jasa_operation_dan_maintenance:
+                        type: string
+                        example: "Local Contractor"
+                        description: Service provider for operation and maintenance.
+                      financial_close:
+                        type: string
+                        example: "2023-11-01"
+                        description: Date of financial close.
+                      epc_cost_realization:
+                        type: number
+                        example: 5000000
+                        description: Realized EPC (Engineering, Procurement, and Construction) cost.
+        "404":
+          description: Project not found or ID is invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "project is not found!"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "An unexpected error occurred."
+  /issue/{slug}:
+    get:
+      tags:
+        - Construction
+      summary: Fetch project issues by project slug.
+      description: Retrieve a list of issues for a project identified by its slug. The list includes only open or in-progress issues and is ordered by priority, due date, and status.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          description: The unique slug identifier for the project.
+          schema:
+            type: string
+            example: "project-abc"
+      responses:
+        "200":
+          description: Successfully retrieved project issues.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "success"
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        title:
+                          type: string
+                          example: "Fix critical bug"
+                        description:
+                          type: string
+                          example: "Resolve the issue causing application crashes."
+                        priority:
+                          type: string
+                          example: "HIGH"
+                        status:
+                          type: string
+                          example: "ON_PROGRESS"
+                        dueDate:
+                          type: string
+                          format: date
+                          example: "2024-12-15"
+        "404":
+          description: Project not found or no slug provided.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "no project selected !"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "An unexpected error occurred."
+    post:
+      tags:
+        - Construction
+      summary: Create a new issue for a project.
+      description: Creates an issue for a project identified by its slug. The issue will be in the `OPEN` status by default.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          description: The unique slug identifier for the project.
+          schema:
+            type: string
+            example: "project-xyz"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                issue:
+                  type: string
+                  maxLength: 255
+                  description: Description of the issue.
+                  example: "Critical bug in the payment gateway."
+                follow_up:
+                  type: string
+                  description: Follow-up actions for the issue.
+                  example: "Implement a hotfix and conduct regression testing."
+                type:
+                  type: string
+                  enum:
+                    - IRR
+                    - TKDN
+                    - ENGINEERING
+                    - CONSTRUCTION
+                    - TESTCOMISSION
+                    - PENYEDIAAN_ENERGI_PRIMER
+                    - PENYEDIAAN_JASA_OPERATION_DAN_MAINTENANCE
+                    - COMMERCIAL_OPERATION_DATE
+                    - FINANCIAL_COST
+                  description: Type of the issue.
+                  example: "ENGINEERING"
+                dueDate:
+                  type: string
+                  format: date
+                  description: Optional due date for the issue.
+                  example: "2024-12-20"
+                priority:
+                  type: string
+                  enum:
+                    - HIGH
+                    - MID
+                    - LOW
+                  description: Optional priority level for the issue.
+                  example: "HIGH"
+                status:
+                  type: string
+                  enum:
+                    - OPEN
+                    - ON_PROGRESS
+                    - COMPLETE
+                  description: Optional status for the issue. Defaults to `OPEN`.
+                  example: "OPEN"
+                remark:
+                  type: string
+                  description: Optional remark for the issue.
+                  example: "Critical system failure."
+      responses:
+        "201":
+          description: Successfully created the issue.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Issue created successfully!"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      issue:
+                        type: string
+                        example: "Critical bug in the payment gateway."
+                      follow_up:
+                        type: string
+                        example: "Implement a hotfix and conduct regression testing."
+                      status:
+                        type: string
+                        example: "OPEN"
+                      type:
+                        type: string
+                        example: "ENGINEERING"
+                      projectId:
+                        type: integer
+                        example: 42
+        "404":
+          description: Project not found or slug not provided.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "No project selected!"
+        "400":
+          description: Validation error or bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Follow-up is required."
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "An unexpected error occurred."
+  /m/operation/{slug}:
+    get:
+      summary: Retrieve Project Operation Window Details
+      description: Fetch detailed information about a project by its slug, including project cost, developer details, power plant details, and operational statistics.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          description: The slug of the project to retrieve.
+          schema:
+            type: string
+      tags:
+        - Operation
+      responses:
+        '200':
+          description: Successful retrieval of project details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: Unique identifier for the project.
+                      name:
+                        type: string
+                        description: Name of the project.
+                      project_cost:
+                        type: number
+                        description: Total cost of the project.
+                      developer:
+                        type: string
+                        description: Developer associated with the project.
+                      rates:
+                        type: object
+                        description: Rate details of the project (Tariff).
+                      coordinate:
+                        type: object
+                        description: Coordinates of the project location.
+                      commercial_operation_date:
+                        type: string
+                        format: date-time
+                        description: Date of commercial operation commencement.
+                      location:
+                        type: string
+                        description: Location of the project.
+                      phase:
+                        type: string
+                        description: Current phase of the project.
+                      power_plants:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            interconnection:
+                              type: string
+                              description: Interconnection details of the power plant.
+                            capacity:
+                              type: string
+                              description: Capacity of the power plant.
+                            type:
+                              type: string
+                              description: Type of power plant.
+                            lat:
+                              type: number
+                              format: float
+                              description: Latitude of the power plant.
+                            lng:
+                              type: number
+                              format: float
+                              description: Longitude of the power plant.
+                      project_information_image_link:
+                        type: string
+                        description: Link to the project information image.
+                      project_location_image_link:
+                        type: array
+                        items:
+                          type: string
+                        description: Links to project location images.
+                      status_operation:
+                        type: object
+                        properties:
+                          maximum_power_output:
+                            type: string
+                          date:
+                            type: string
+                            format: date-time
+                          power_output:
+                            type: object
+                            properties:
+                              desktop:
+                                type: number
+                              mobile:
+                                type: number
+                      employee:
+                        type: object
+                        properties:
+                          tugas_karya:
+                            type: number
+                          internal_jvc:
+                            type: number
+                      electricity:
+                        type: object
+                        properties:
+                          produced:
+                            type: string
+                          output_power:
+                            type: string
+                          energy_estimation_anually:
+                            type: string
+                          energy_equivalent:
+                            type: string
+                          revenue:
+                            type: string
+                      commercial:
+                        type: object
+                        properties:
+                          actual:
+                            type: number
+                          plan:
+                            type: number
+        '404':
+          description: Project not found or no project selected.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: no project found !
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: An unexpected error occurred.
+  /esg/overview/{project_id}:
+    get:
+      summary: Get ESG Overview
+      description: Retrieve comprehensive ESG metrics for a specific project
+      tags:
+        - ESG
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: number
+          description: Unique identifier for the project
+          example: 1234
+
+      responses:
+        '200':
+          description: Successful retrieval of ESG overview data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'success'
+                  data:
+                    type: object
+                    properties:
+                      risk:
+                        type: string
+                        description: Overall ESG risk score
+                        example: '31.75'
+                      Environment:
+                        type: object
+                        properties:
+                          EnergyConsumption:
+                            type: string
+                            example: '1786 ton CO₂'
+                          EnergyReduction:
+                            type: string
+                            example: '0.786 ton CO₂'
+                          WaterConsumption:
+                            type: string
+                            example: '1.273 Liter (m³)'
+                          WasteGenerated:
+                            type: string
+                            example: '1.273 Liter (m³)'
+                          GreenEnergyProduction:
+                            type: string
+                            example: '240.000 KWh'
+                          TreesPlanted:
+                            type: object
+                            properties:
+                              Mangrove:
+                                type: integer
+                                example: 11000
+                              OtherTrees:
+                                type: integer
+                                example: 9000
+
+                      Social:
+                        type: object
+                        properties:
+                          CommunityDevelopment:
+                            type: string
+                            example: 'Rp 110.000.000'
+                          EmployeeStatisticsAndEquality:
+                            type: string
+                            example: '40% Women'
+                          HumanCapitalDevelopment:
+                            type: string
+                            example: '1.802 Hours'
+                          HumanRightsReports:
+                            type: string
+                            example: '1 Policy'
+                          HealthAndSafety:
+                            type: object
+                            properties:
+                              TrainingHours:
+                                type: string
+                                example: '2500 Hours'
+                              Accidents:
+                                type: string
+                                example: 'No Accidents'
+                          CustomerSatisfaction:
+                            type: string
+                            example: '81%'
+
+                      Governance:
+                        type: object
+                        properties:
+                          GovernanceRiskAndCompliance:
+                            type: string
+                            example: '27 Actions'
+                          MoneyLaunderingPolicies:
+                            type: string
+                            example: '1 Active Policy'
+                          WhistleblowingCases:
+                            type: string
+                            example: '12 Resolved'
+                          CyberSecurity:
+                            type: string
+                            example: '1 Case Resolved'
+                          ESGCommitments:
+                            type: string
+                            example: '3 Active'
+
+        '400':
+          description: Bad Request - Invalid project ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: 'Invalid project ID' 
+
+        '404':
+          description: Not Found - Project data not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: 'Project not found'
+  /esg/energy-consumption:
+    post:
+      tags:
+        - ESG
+      summary: Create Energy Consumption Record
+      description: Adds a new energy consumption record for a project.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                project_id:
+                  type: number
+                  description: The ID of the related project.
+                  example: 12345
+                period:
+                  type: string
+                  description: The period (month) for the energy consumption data.
+                  enum:
+                    - january
+                    - february
+                    - march
+                    - april
+                    - may
+                    - june
+                    - july
+                    - august
+                    - september
+                    - october
+                    - november
+                    - december
+                  example: "january"
+                year:
+                  type: integer
+                  description: The year of energy consumption (optional, default is 2024).
+                  minimum: 2000
+                  maximum: 2100
+                  example: 2024
+                renewable:
+                  type: number
+                  description: The amount of renewable energy consumed (must be positive).
+                  example: 1500
+                non_renewable:
+                  type: number
+                  description: The amount of non-renewable energy consumed (must be positive).
+                  example: 3000
+      responses:
+        '201':
+          description: Energy consumption data successfully created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                        example: 1
+                      project_id:
+                        type: number
+                        example: 12345
+                      period:
+                        type: string
+                        example: "january"
+                      year:
+                        type: integer
+                        example: 2024
+                      renewable:
+                        type: number
+                        example: 1500
+                      non_renewable:
+                        type: number
+                        example: 3000
+        '400':
+          description: Validation failed for the input data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Period is required."
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Internal Server Error"
+  /esg-energy-reduction:
+    post:
+      tags:
+        - ESG
+      summary: Create Energy Reduction Record
+      description: Adds a new energy reduction record for a project.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                project_id:
+                  type: number
+                  description: The ID of the related project.
+                  example: 12345
+                period:
+                  type: string
+                  description: The period (month) for the energy reduction data.
+                  enum:
+                    - january
+                    - february
+                    - march
+                    - april
+                    - may
+                    - june
+                    - july
+                    - august
+                    - september
+                    - october
+                    - november
+                    - december
+                  example: "january"
+                year:
+                  type: integer
+                  description: The year of energy reduction (optional, default is 2024).
+                  minimum: 2000
+                  maximum: 2100
+                  example: 2024
+                renewable:
+                  type: number
+                  description: The amount of renewable energy reduced (must be positive).
+                  example: 500
+                non_renewable:
+                  type: number
+                  description: The amount of non-renewable energy reduced (must be positive).
+                  example: 1200
+      responses:
+        '201':
+          description: Energy reduction data successfully created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                        example: 1
+                      project_id:
+                        type: number
+                        example: 12345
+                      period:
+                        type: string
+                        example: "january"
+                      year:
+                        type: integer
+                        example: 2024
+                      renewable:
+                        type: number
+                        example: 500
+                      non_renewable:
+                        type: number
+                        example: 1200
+        '400':
+          description: Validation failed for the input data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Period is required."
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Internal Server Error"
+  /esg/energy-total:
+    post:
+      tags:
+        - ESG
+      summary: Create Energy Total Record
+      description: Adds a new energy total record for a project.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                project_id:
+                  type: number
+                  description: The ID of the related project (optional).
+                  example: 12345
+                year:
+                  type: integer
+                  description: The year for the energy total data (optional, default is 2024).
+                  minimum: 2000
+                  maximum: 2100
+                  example: 2024
+                total_electricity:
+                  type: integer
+                  description: The total electricity used (optional, must be non-negative).
+                  example: 5000
+                total_fuel:
+                  type: integer
+                  description: The total fuel consumed (optional, must be non-negative).
+                  example: 1200
+                total_distance:
+                  type: integer
+                  description: The total distance covered (optional, must be non-negative).
+                  example: 300
+      responses:
+        '201':
+          description: Energy total data successfully created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Energy total created successfully"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                        example: 1
+                      project_id:
+                        type: number
+                        example: 12345
+                      year:
+                        type: integer
+                        example: 2024
+                      total_electricity:
+                        type: integer
+                        example: 5000
+                      total_fuel:
+                        type: integer
+                        example: 1200
+                      total_distance:
+                        type: integer
+                        example: 300
+        '400':
+          description: Validation failed for the input data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Validation error: total_electricity must be a non-negative integer."
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Internal Server Error"
+  /esg/water-consumption:
+    post:
+      tags:
+        - ESG
+      summary: Create Water Consumption Record
+      description: Adds a new water consumption record for a project.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                project_id:
+                  type: number
+                  description: The ID of the related project (optional).
+                  example: 12345
+                period:
+                  type: string
+                  description: The period (month) for the water consumption data (optional).
+                  enum:
+                    - january
+                    - february
+                    - march
+                    - april
+                    - may
+                    - june
+                    - july
+                    - august
+                    - september
+                    - october
+                    - november
+                    - december
+                  example: "january"
+                year:
+                  type: integer
+                  description: The year of water consumption (optional, default is 2024).
+                  minimum: 2000
+                  maximum: 2100
+                  example: 2024
+                renewable:
+                  type: number
+                  description: The amount of renewable water consumed (optional, must be positive).
+                  example: 500
+                non_renewable:
+                  type: number
+                  description: The amount of non-renewable water consumed (optional, must be positive).
+                  example: 1000
+      responses:
+        '201':
+          description: Water consumption record successfully created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Water consumption record created successfully"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                        example: 1
+                      project_id:
+                        type: number
+                        example: 12345
+                      period:
+                        type: string
+                        example: "january"
+                      year:
+                        type: integer
+                        example: 2024
+                      renewable:
+                        type: number
+                        example: 500
+                      non_renewable:
+                        type: number
+                        example: 1000
+        '400':
+          description: Validation failed for the input data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Validation error: renewable must be positive."
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Internal Server Error"
+  /esg/water-total:
+    post:
+      tags:
+        - ESG
+      summary: Create Water Total Record
+      description: Adds a new water total record for a project.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                project_id:
+                  type: number
+                  description: The ID of the related project (optional).
+                  example: 12345
+                year:
+                  type: integer
+                  description: The year for the water total data (optional).
+                  minimum: 2000
+                  maximum: 2100
+                  example: 2024
+                total_air_kemasan:
+                  type: integer
+                  description: The total usage of packaged water (optional, must be non-negative).
+                  example: 100
+                total_air_produksi:
+                  type: integer
+                  description: The total usage of production water (optional, must be non-negative).
+                  example: 500
+      responses:
+        '201':
+          description: Water total record successfully created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Water total record created successfully"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                        example: 1
+                      project_id:
+                        type: number
+                        example: 12345
+                      year:
+                        type: integer
+                        example: 2024
+                      total_air_kemasan:
+                        type: integer
+                        example: 100
+                      total_air_produksi:
+                        type: integer
+                        example: 500
+        '400':
+          description: Validation failed for the input data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Validation error: total_air_kemasan must be a non-negative integer."
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Internal Server Error"
+  /esg/waste-produced:
+    post:
+      tags:
+        - ESG
+      summary: Create Waste Generated (Produced) Record
+      description: Adds a new waste generated (produced) record for a project.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                project_id:
+                  type: number
+                  description: The ID of the related project (optional).
+                  example: 12345
+                period:
+                  type: string
+                  description: The period (month) for the waste data (optional).
+                  enum:
+                    - january
+                    - february
+                    - march
+                    - april
+                    - may
+                    - june
+                    - july
+                    - august
+                    - september
+                    - october
+                    - november
+                    - december
+                  example: "january"
+                year:
+                  type: integer
+                  description: The year of the waste data (optional, default is 2024).
+                  minimum: 2000
+                  maximum: 2100
+                  example: 2024
+                organic:
+                  type: integer
+                  description: The amount of organic waste generated (optional, must be non-negative).
+                  example: 150
+                plastic:
+                  type: integer
+                  description: The amount of plastic waste generated (optional, must be non-negative).
+                  example: 300
+                paper:
+                  type: integer
+                  description: The amount of paper waste generated (optional, must be non-negative).
+                  example: 200
+                canIron:
+                  type: integer
+                  description: The amount of can/iron waste generated (optional, must be non-negative).
+                  example: 50
+      responses:
+        '201':
+          description: Waste generated (produced) record successfully created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Waste generated (produced) record created successfully"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                        example: 1
+                      project_id:
+                        type: number
+                        example: 12345
+                      period:
+                        type: string
+                        example: "january"
+                      year:
+                        type: integer
+                        example: 2024
+                      organic:
+                        type: integer
+                        example: 150
+                      plastic:
+                        type: integer
+                        example: 300
+                      paper:
+                        type: integer
+                        example: 200
+                      canIron:
+                        type: integer
+                        example: 50
+        '400':
+          description: Validation failed for the input data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Validation error: organic must be a non-negative integer."
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Internal Server Error"
+  /esg/waste-managed:
+    post:
+      tags:
+        - ESG
+      summary: Create Waste Generated (Managed) Record
+      description: Adds a new waste generated (managed) record for a project.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                project_id:
+                  type: number
+                  description: The ID of the related project (optional).
+                  example: 12345
+                period:
+                  type: string
+                  description: The period (month) for the waste data (optional).
+                  enum:
+                    - january
+                    - february
+                    - march
+                    - april
+                    - may
+                    - june
+                    - july
+                    - august
+                    - september
+                    - october
+                    - november
+                    - december
+                  example: "january"
+                year:
+                  type: integer
+                  description: The year of the waste data (optional, default is 2024).
+                  minimum: 2000
+                  maximum: 2100
+                  example: 2024
+                organic:
+                  type: integer
+                  description: The amount of organic waste managed (optional, must be non-negative).
+                  example: 150
+                plastic:
+                  type: integer
+                  description: The amount of plastic waste managed (optional, must be non-negative).
+                  example: 300
+                paper:
+                  type: integer
+                  description: The amount of paper waste managed (optional, must be non-negative).
+                  example: 200
+                canIron:
+                  type: integer
+                  description: The amount of can/iron waste managed (optional, must be non-negative).
+                  example: 50
+      responses:
+        '201':
+          description: Waste generated (managed) record successfully created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Waste generated (managed) record created successfully"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                        example: 1
+                      project_id:
+                        type: number
+                        example: 12345
+                      period:
+                        type: string
+                        example: "january"
+                      year:
+                        type: integer
+                        example: 2024
+                      organic:
+                        type: integer
+                        example: 150
+                      plastic:
+                        type: integer
+                        example: 300
+                      paper:
+                        type: integer
+                        example: 200
+                      canIron:
+                        type: integer
+                        example: 50
+        '400':
+          description: Validation failed for the input data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Validation error: organic must be a non-negative integer."
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Internal Server Error"
+  /esg/waste-bthree:
+    post:
+      tags:
+        - ESG
+      summary: Create Waste Generated (B Three) Record
+      description: Adds a new waste generated (B Three) record for a project.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                project_id:
+                  type: number
+                  description: The ID of the related project (optional).
+                  example: 12345
+                period:
+                  type: string
+                  description: The period (month) for the waste data (optional).
+                  enum:
+                    - january
+                    - february
+                    - march
+                    - april
+                    - may
+                    - june
+                    - july
+                    - august
+                    - september
+                    - october
+                    - november
+                    - december
+                  example: "january"
+                year:
+                  type: integer
+                  description: The year of the waste data (optional, default is 2024).
+                  minimum: 2000
+                  maximum: 2100
+                  example: 2024
+                organic:
+                  type: integer
+                  description: The amount of organic waste generated (optional, must be non-negative).
+                  example: 150
+                plastic:
+                  type: integer
+                  description: The amount of plastic waste generated (optional, must be non-negative).
+                  example: 300
+                paper:
+                  type: integer
+                  description: The amount of paper waste generated (optional, must be non-negative).
+                  example: 200
+                canIron:
+                  type: integer
+                  description: The amount of can/iron waste generated (optional, must be non-negative).
+                  example: 50
+      responses:
+        '201':
+          description: Waste generated (B Three) record successfully created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Waste generated (B Three) record created successfully"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                        example: 1
+                      project_id:
+                        type: number
+                        example: 12345
+                      period:
+                        type: string
+                        example: "january"
+                      year:
+                        type: integer
+                        example: 2024
+                      organic:
+                        type: integer
+                        example: 150
+                      plastic:
+                        type: integer
+                        example: 300
+                      paper:
+                        type: integer
+                        example: 200
+                      canIron:
+                        type: integer
+                        example: 50
+        '400':
+          description: Validation failed for the input data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Validation error: organic must be a non-negative integer."
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Internal Server Error"
+  /esg/trees-planted:
+    post:
+      tags:
+        - ESG
+      summary: Create Trees Planted Record
+      description: Adds a new record of trees planted for a specific project and period.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                project_id:
+                  type: number
+                  description: The ID of the related project (optional).
+                  example: 12345
+                period:
+                  type: string
+                  description: The period (month) for the tree planting data (optional).
+                  enum:
+                    - january
+                    - february
+                    - march
+                    - april
+                    - may
+                    - june
+                    - july
+                    - august
+                    - september
+                    - october
+                    - november
+                    - december
+                  example: "january"
+                year:
+                  type: integer
+                  description: The year of the tree planting data (optional, default is 2024).
+                  minimum: 2000
+                  maximum: 2100
+                  example: 2024
+                mangrove:
+                  type: integer
+                  description: The number of mangrove trees planted (optional, must be non-negative).
+                  example: 500
+                other:
+                  type: integer
+                  description: The number of other types of trees planted (optional, must be non-negative).
+                  example: 300
+      responses:
+        '201':
+          description: Trees planted record successfully created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Trees planted record created successfully"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                        example: 1
+                      project_id:
+                        type: number
+                        example: 12345
+                      period:
+                        type: string
+                        example: "january"
+                      year:
+                        type: integer
+                        example: 2024
+                      mangrove:
+                        type: integer
+                        example: 500
+                      other:
+                        type: integer
+                        example: 300
+        '400':
+          description: Validation failed for the input data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Validation error: period must be one of [january, february, march, ...]."
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Internal Server Error"
+  /esg/community-empowerment:
+    post:
+      tags:
+        - ESG
+      summary: Create Community Empowerment Record
+      description: Adds a new record of community empowerment activities for a specific project and period.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                project_id:
+                  type: number
+                  description: The ID of the related project (optional).
+                  example: 12345
+                period:
+                  type: string
+                  description: The period (month) for the community empowerment data (optional).
+                  enum:
+                    - january
+                    - february
+                    - march
+                    - april
+                    - may
+                    - june
+                    - july
+                    - august
+                    - september
+                    - october
+                    - november
+                    - december
+                  example: "january"
+                category:
+                  type: string
+                  description: The category of the community empowerment activity (e.g., education, health, etc.).
+                  example: "education"
+                realization:
+                  type: number
+                  description: The realization amount for the activity (e.g., funding or resources allocated).
+                  example: 15000
+                beneficiary:
+                  type: number
+                  description: The number of beneficiaries of the activity.
+                  example: 300
+      responses:
+        '201':
+          description: Community empowerment record successfully created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Community empowerment record created successfully"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                        example: 1
+                      project_id:
+                        type: number
+                        example: 12345
+                      period:
+                        type: string
+                        example: "january"
+                      year:
+                        type: integer
+                        example: 2024
+                      category:
+                        type: string
+                        example: "education"
+                      realization:
+                        type: number
+                        example: 15000
+                      beneficiary:
+                        type: number
+                        example: 300
+        '400':
+          description: Validation failed for the input data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Validation error: category is required."
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Internal Server Error"
