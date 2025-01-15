@@ -11,19 +11,14 @@ export const registerByEmailUsernameController = async(req : Request, res : Resp
 
         console.log(req.body)
 
-        const [existingEmail, existingUsername] = await Promise.all([
+        const [existingEmail] = await Promise.all([
             userUtil.findUserByEmail(email),
-            userUtil.findUserByUsername(username),
           ]);
         
           if (existingEmail) {
             return next(new ErrorWithStatusCode("email is already registered", 409));
           }
-      
-          if (existingUsername) {
-            return next(new ErrorWithStatusCode("username is already registered", 409));
-          }
-
+    
           const hashedPassword = await userUtil.hashPassword(password)
 
           console.log(hashedPassword)
@@ -33,7 +28,7 @@ export const registerByEmailUsernameController = async(req : Request, res : Resp
             return next(new ErrorWithStatusCode("Something went wrong during the signup process", 401));
         }
 
-        await userUtil.createUser(fullname, username, email, hashedPassword)
+        await userUtil.createUser(email, hashedPassword)
 
 
         res.status(201).json({
@@ -55,7 +50,32 @@ export const loginByEmailController = async(req : Request, res : Response, next 
         console.log(isEmail)
 
         if(!isEmail){
-            return next(new ErrorWithStatusCode("username does not belong to any account!", 404));
+            return next(new ErrorWithStatusCode("email does not belong to any account!", 404));
+        }
+
+        if(!isEmail.password){
+            const payload = {
+                id : isEmail.id,
+            }
+            const token = jwt.sign(payload,(process.env.SECRET_KEY as unknown as string),{
+                algorithm: 'HS512',
+                expiresIn: '7d'
+            })
+    
+    
+            const response = {
+                status : true,
+                message: "Succesfully login!",
+                data: {   
+                    email : isEmail.email,             
+                    token: token
+                }
+              }
+            
+            res.status(200).json(
+                response
+            );
+            return
         }
 
         if (!isEmail.password.startsWith('$argon')) {
@@ -72,8 +92,7 @@ export const loginByEmailController = async(req : Request, res : Response, next 
 
         const payload = {
             id : isEmail.id,
-            username : isEmail.username,
-            project_assigned_id : isEmail.project_users[0].project_id
+            role : isEmail.role
         }
 
         console.log(isMatch)
@@ -88,8 +107,6 @@ export const loginByEmailController = async(req : Request, res : Response, next 
             status : true,
             message: "Succesfully login!",
             data: {   
-                full_name : isEmail.full_name,
-                username : isEmail.username,
                 email : isEmail.email,             
                 token: token
             }

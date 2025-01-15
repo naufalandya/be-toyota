@@ -1,21 +1,6 @@
 import type { Request, Response, NextFunction } from "express"
 import jwt from 'jsonwebtoken';
 import { ErrorWithStatusCode } from "../class/error";
-import prisma from "../libs/prisma.lib";
-import { Prisma } from "@prisma/client";
-import { createClient } from 'redis';
-
-
-const redisClient = createClient({
-    url: `redis://redis:6379` // Assuming your Redis service is named `redis` in Docker Compose
-  });
-  
-  redisClient.on('error', (err) => console.error('Redis Client Error:', err));
-  
-(async () => {
-    await redisClient.connect();
-    console.log('Connected to Redis');
-})();
 
 export interface UserRequest extends Request {
     user?: {
@@ -53,71 +38,92 @@ export const authenticateToken = async(req : Request, res : Response, next : Nex
 }
 
 
-
-export const authorizeFeature = (requiredFeature : string, requiredAction : string) => {
-    return async (req : Request, res : Response, next : NextFunction) => {
-      try {
-        const userId = Number((req as UserRequest)?.user?.id); 
-        const { projectId } = req.params; 
+export const checkAdminRole = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = (req as any).user; 
   
-        const permission = await prisma.project_permissions.findFirst({
-          where: {
-            user_id: userId,
-            project_id: parseInt(projectId),
-            feature: { name: requiredFeature }, 
-            action: requiredAction as Prisma.EnumACTIONFilter<"project_permissions">,
-          },
+      if (!user || !user.role) {
+        res.status(403).json({
+          success: false,
+          message: "Akses ditolak: tidak ada peran yang ditemukan.",
         });
-  
-        if (!permission) {
-            return next(new ErrorWithStatusCode("Forbidden: Access denied", 403));
-        }
-  
-      } catch (error) {
-    
-        res.status(500).json({ message: "Internal server error" });
+        return 
       }
-    };
+  
+      if (user.role !== "admin") {
+         res.status(403).json({
+          success: false,
+          message: "Akses ditolak: hanya admin yang diperbolehkan.",
+        });
+        return
+      }
+  
+      next();
+    } catch (err) {
+      next(err);
+    }
   };
 
-  export const authorizeFeatureWithCache = (requiredFeature: string, requiredAction: string) => {
-    return async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        const userId = Number((req as UserRequest)?.user?.id);
-        const projectId = Number((req as UserRequest)?.user?.project_assigned_id);
 
-        (req as any).userId = userId;
-        (req as any).projectId = projectId;
+
+  export const checkAdminRoleAccess = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = (req as any).user; 
   
-        const cacheKey = `permission:${userId}:${projectId}:${requiredFeature}:${requiredAction}`;
-  
-        console.log(cacheKey)
-        const cachedPermission = await redisClient.get(cacheKey);
-  
-        if (cachedPermission === 'allowed') {
-          return next();
-        }
-  
-        const permission = await prisma.project_permissions.findFirst({
-          where: {
-            user_id: userId,
-            project_id: projectId,
-            feature: { name: requiredFeature },
-            action: requiredAction as Prisma.EnumACTIONFilter<"project_permissions">,
-          },
+      if (!user || !user.role) {
+        res.status(403).json({
+          success: false,
+          message: "Akses ditolak: tidak ada peran yang ditemukan.",
         });
-  
-        if (!permission) {
-          await redisClient.setEx(cacheKey, 300, 'denied');
-          return next(new ErrorWithStatusCode('Forbidden: Access denied', 403));
-        }
-  
-        await redisClient.setEx(cacheKey, 3600, 'allowed');
-  
-        return next();
-      } catch (error) {
-        console.error('Authorization Error:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        return 
       }
-    };
+  
+      if (user.role !== "admin") {
+         res.status(403).json({
+          success: false,
+          message: "Akses ditolak: hanya admin yang diperbolehkan.",
+        });
+        return
+      }
+  
+      res.status(200).json({
+        success: true,
+        message: "Akses accepted",
+      });
+      return
+    
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  export const checkAdminUserAccess = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = (req as any).user; 
+  
+      if (!user || !user.role) {
+        res.status(403).json({
+          success: false,
+          message: "Akses ditolak: tidak ada peran yang ditemukan.",
+        });
+        return 
+      }
+  
+      if (user.role !== "user") {
+         res.status(403).json({
+          success: false,
+          message: "Akses ditolak: hanya user yang diperbolehkan.",
+        });
+        return
+      }
+  
+      res.status(200).json({
+        success: true,
+        message: "Akses accepted",
+      });
+      return
+    
+    } catch (err) {
+      next(err);
+    }
   };
