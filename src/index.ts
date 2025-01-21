@@ -45,7 +45,9 @@ const allowedOrigins = [
   "https://idx.google.com/appplnnr-2542597",
   "https://alobro.my.id/",
   "https://alobro.my.id",
-  "http://localhost:3002"
+  "http://localhost:3002",
+  "https://toyotasales.pages.dev/",
+  "https://toyotasales.pages.dev"
 ];
 
 //environment
