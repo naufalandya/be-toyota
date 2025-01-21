@@ -12,7 +12,7 @@ datasource db {
 model users {
   id          Int    @id @default(autoincrement())
   nama        String?
-  nik         String?   
+  nik         String @unique
   email       String    @unique
   password    String?
   jabatan     String?
@@ -26,7 +26,7 @@ model users {
 
 model insentive {
   id               String   @id @default(cuid())
-  nik              String?
+  nik              String @unique
   nama             String?
   jabatan          String?
   periode_awal     DateTime?
@@ -41,6 +41,7 @@ model insentive {
   contest_insentif Float?
   sbi_insentif     Float?
   status           String?
-  user_profile_id  Int?
+  user_profile_id  Int
   user_profile     users? @relation(fields: [user_profile_id], references: [id])
+    created_at DateTime @default(now())
 }

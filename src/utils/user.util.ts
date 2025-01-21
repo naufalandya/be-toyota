@@ -35,6 +35,7 @@ export const createUser = async (email : string, hashedPassword : string) => {
             data: {
               email,
               password: hashedPassword,
+              nik : `${Math.random(), Math.random()}`
             },
           });
     } catch (err) {
