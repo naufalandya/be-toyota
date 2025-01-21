@@ -44,4 +44,6 @@ model insentive {
   user_profile_id  Int
   user_profile     users? @relation(fields: [user_profile_id], references: [id])
     created_at DateTime @default(now())
+
+    @@index([id, periode_awal, periode_akhir])
 }

@@ -2,7 +2,7 @@ import { Router } from "express";
 import main from "../controllers/main/main.controller"
 
 const mainRoute = Router()
-    .put("/incentive/status", main.editStatusToSuccess)
+    .put("/incentive/status/:id", main.editStatusToSuccess)
     .post("/incentive", main.createIncentive)
     .get("/incentive/:id", main.getIncentiveById)
     .put("/incentive/:id", main.updateIncentiveById)

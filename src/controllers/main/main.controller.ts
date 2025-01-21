@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express"
 import prisma from "../../libs/prisma.lib";
 import { UserRequest } from './../../middlewares/authenticate.middleware';
 import { startOfMonth, endOfMonth } from "date-fns"; 
+import { sendEmail } from "../../libs/nodemailer.lib";
 
 
 export default new class MainController {
@@ -251,10 +252,11 @@ export default new class MainController {
       async getIncentivesThisMonth(req: Request, res: Response, next: NextFunction) {
         try {
           const now = new Date();
-      
-          const startOfThisMonth = startOfMonth(now);
-          const endOfThisMonth = endOfMonth(now);
-      
+          
+          // Get the start and end of the current month
+          const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          const endOfThisMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+          
           // Grouping and aggregation using Prisma
           const incentives = await prisma.insentive.groupBy({
             by: ['user_profile_id'],
@@ -269,7 +271,7 @@ export default new class MainController {
               sbi_insentif: true,
             },
           });
-      
+          
           // Fetch related user profiles
           const userProfiles = await prisma.users.findMany({
             where: {
@@ -279,14 +281,28 @@ export default new class MainController {
               id: true,
               nama: true,
               supervisor: true,
+              nik: true,
+              insentives: {
+                where: {
+                  created_at: {
+                    gte: startOfThisMonth, // Greater than or equal to the first day of the month
+                    lte: endOfThisMonth,   // Less than or equal to the last day of the month
+                  },
+                },
+                select: {
+                  status: true,
+                },
+              },
             },
           });
-      
+          
           // Merge user profile data with aggregated incentives
           const result = incentives.map((incentive) => {
             const userProfile = userProfiles.find((user) => user.id === incentive.user_profile_id);
       
             return {
+              id: userProfile?.id,
+              status: userProfile?.insentives[0]?.status ?? 'Unknown',
               nama: userProfile?.nama ?? 'Unknown',
               supervisor: userProfile?.supervisor ?? 'Unknown',
               totalPoin: incentive._sum.poin ?? 0,
@@ -365,48 +381,84 @@ export default new class MainController {
       async editStatusToSuccess(req: Request, res: Response, next: NextFunction) {
         try {
           const { id } = req.params; 
-          
-          const insentive = await prisma.insentive.findUnique({
+      
+          // Get the start and end of the current month
+          const now = new Date();
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+      
+          // Update the status of incentives for the specific user
+          const data = await prisma.insentive.updateMany({
             where: {
-              id: id, 
-            },
-          });
-      
-          if (!insentive) {
-            res.status(404).json({
-              success: false,
-              message: "Insentif tidak ditemukan.",
-            });
-
-            return 
-          }
-      
-          if (insentive.status !== "pending") {
-            res.status(400).json({
-              success: false,
-              message: "Insentif sudah tidak dalam status pending.",
-            });
-            return 
-          }
-      
-          const updatedInsentive = await prisma.insentive.update({
-            where: {
-              id: id,
+              user_profile_id: Number(id),
+              created_at: {
+                gte: startOfMonth,
+                lte: endOfMonth,
+              },
             },
             data: {
-              status: "success", 
+              status: "success",
             },
           });
       
-          res.status(200).json({
-            success: true,
-            message: "Status insentif berhasil diubah menjadi success.",
-            data: updatedInsentive,
+          // Fetch the user's details
+          const user = await prisma.users.findUnique({
+            where: {
+              id: Number(id),
+            },
           });
+      
+          // If the user exists, prepare the email content
+          if (user) {
+            // Calculate the total points and incentive amount for the user
+            const incentives = await prisma.insentive.aggregate({
+              _sum: {
+                poin: true,
+                jumlah_insentif: true,
+                contest_insentif: true,
+                sbi_insentif: true,
+              },
+              where: {
+                user_profile_id: Number(id),
+                created_at: {
+                  gte: startOfMonth,
+                  lte: endOfMonth,
+                },
+              },
+            });
+      
+            // Prepare the email content with incentive details
+            const message = `
+              <h1>Incentive Status Update</h1>
+              <p>Dear ${user.nama},</p>
+              <p>Your incentive status has been updated to <strong>Success</strong> for the period of ${startOfMonth.toLocaleDateString()} to ${endOfMonth.toLocaleDateString()}.</p>
+              <p><strong>Total Points:</strong> ${incentives._sum.poin ?? 0}</p>
+              <p><strong>Total Incentive Amount:</strong> ${incentives._sum.jumlah_insentif ?? 0}</p>
+              <p><strong>Total Promotion Amount:</strong> ${(incentives._sum.contest_insentif ?? 0) + (incentives._sum.sbi_insentif ?? 0)}</p>
+              <p>Thank you for your continued efforts!</p>
+              <p>Best regards,</p>
+              <p>Your Company Team</p>
+            `;
+
+            console.log(message)
+      
+            // Send the email to the user
+            await sendEmail('Incentive Status Update', message, user.email);
+      
+            // Return success response
+            res.json({
+              success: true,
+              message: 'Incentive status updated and email sent successfully!',
+              data,
+            });
+          } else {
+            res.status(404).json({ success: false, message: 'User not found' });
+          }
         } catch (err) {
-          next(err); 
+          next(err);
         }
       }
+      
       
       async deleteInsentive(req: Request, res: Response, next: NextFunction) {
         try {

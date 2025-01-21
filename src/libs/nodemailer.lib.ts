@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-export const sendErrorEmail = async (subject: string, message: string) => {
+export const sendEmail = async (subject: string, message: string, email : string) => {
     const transporter = nodemailer.createTransport({
         host: process.env.SERVER_HOST as string,
         port: 465,
@@ -14,15 +14,10 @@ export const sendErrorEmail = async (subject: string, message: string) => {
     const emailOptions = [
         {
             from: process.env.SERVER_EMAIL as string,
-            to: process.env.ADMINISTRATOR_1 as string,
+            to: email,
             subject: subject,
             text: message,
-        },
-        {
-            from: process.env.SERVER_EMAIL as string,
-            to: process.env.ADMINISTRATOR_2 as string,
-            subject: subject,
-            text: message,
+            html: message, // Send HTML content
         },
     ];
 

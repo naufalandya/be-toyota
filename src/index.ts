@@ -144,28 +144,14 @@ app.get("/metrics", async (req: Request, res: Response) => {
      res.send(`Hello, TypeScript with Express in ${NODE_ENV} mode!`);
   })
   .get('/api/access-menu', authenticateToken, (req: Request, res: Response) => {
-    const user = (req as UserRequest).user;
-
-    if (!user) {
-      res.status(403).json({
-        success: false,
-        message: 'Akses ditolak: pengguna tidak terautentikasi.',
-      });
-      return 
-    }
-
-    console.log(user)
-
-    const roleAccess: Record<UserRole, string[]> = {
-      [UserRole.ADMIN]: ['dashboard', 'insentive', 'sales', 'notifications', 'accounts'],
-      [UserRole.USER]: ['dashboard', 'notifications', 'insentive', 'sales'],
-    };
+    // Semua menu yang tersedia
+    const allMenus = ['dashboard', 'insentive', 'sales', 'notifications', 'accounts'];
   
-    const accessibleMenu = roleAccess[user.role as UserRole] || [];
-    res.json({ accessibleMenu });
+    // Kembalikan semua menu tanpa memeriksa peran pengguna
+    res.json({ accessibleMenu: allMenus });
   })
   
-  
+
   .use((err : Error, req : Request, res : Response, next : NextFunction) => {
     handleError(req, err, res)
   })

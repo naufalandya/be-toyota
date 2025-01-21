@@ -1,7 +1,6 @@
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { Response, Request } from "express";
 import Joi from "joi";
-import { sendErrorEmail } from "../libs/nodemailer.lib";
 
 const ENV = process.env.PORT as string;
 
@@ -44,7 +43,6 @@ const handlePrismaError = (err: PrismaClientKnownRequestError, res: Response) =>
     } else {
         console.log(err);
         const errorMessage = `Database Error: ${JSON.stringify(err, null, 2)}`;
-        sendErrorEmail('Database Error', errorMessage);
         return createErrorResponse(400, 'Query bad request!', res);
     }
 };
@@ -66,8 +64,6 @@ export const handleError = async (req: Request, err: unknown, res: Response) => 
 
     const errorMessage = `Internal Server Error: ${JSON.stringify(err, null, 2)}, Path: ${req.path}`;
     console.log(errorMessage);
-
-    await sendErrorEmail('Internal Server Error', errorMessage);
 
     return res.status(500).json({
         status: false,
