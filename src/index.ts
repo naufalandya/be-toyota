@@ -47,7 +47,9 @@ const allowedOrigins = [
   "https://alobro.my.id",
   "http://localhost:3002",
   "https://toyotasales.pages.dev/",
-  "https://toyotasales.pages.dev"
+  "https://toyotasales.pages.dev",
+  "http://103.196.155.16:5174",
+  "http://103.196.155.16:5174/"
 ];
 
 //environment
